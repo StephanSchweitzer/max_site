@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import path from 'path'
+import fs from 'fs'
 
-export async function GET(request: NextRequest) {
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ filename: string }> }
+) {
     try {
+        // Await params to fix Next.js 15 requirement
+        const { filename } = await params
         // Get password from different possible sources
         const { searchParams } = new URL(request.url)
         const passwordFromQuery = searchParams.get('password')
@@ -43,69 +50,55 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Fetch and return images if access is granted
-        const images = await prisma.image.findMany({
-            select: {
-                id: true,
-                url: true,
-            },
-        })
+        // Build path to image in private-images folder
+        const imagePath = path.join(process.cwd(), 'private-images', filename)
 
-        return NextResponse.json(images)
-
-    } catch (error) {
-        console.error('Error fetching images:', error)
-        return NextResponse.json(
-            { error: 'Failed to fetch images' },
-            { status: 500 }
-        )
-    }
-}
-
-// Optional: Also handle POST requests with password in body
-export async function POST(request: NextRequest) {
-    try {
-        const { password } = await request.json()
-
-        // Check countdown - unlocks next Friday
-        const unlockTime = new Date('2025-05-30T00:00:00Z')
-        const now = new Date()
-        const countdownExpired = now >= unlockTime
-
-        let accessGranted = false
-
-        if (countdownExpired) {
-            accessGranted = true
-        } else if (password) {
-            const storedPassword = await prisma.password.findUnique({
-                where: { password: password },
-            })
-            accessGranted = !!storedPassword
-        }
-
-        if (!accessGranted) {
+        // Check if file exists
+        if (!fs.existsSync(imagePath)) {
             return NextResponse.json(
-                {
-                    error: 'Access denied',
-                    timeRemaining: countdownExpired ? 0 : unlockTime.getTime() - now.getTime()
-                },
-                { status: 403 }
+                { error: 'Image not found' },
+                { status: 404 }
             )
         }
 
-        const images = await prisma.image.findMany({
-            select: {
-                id: true,
-                url: true,
+        // Read the image file
+        const imageBuffer = fs.readFileSync(imagePath)
+
+        // Determine content type based on file extension
+        const ext = path.extname(filename).toLowerCase()
+        let contentType = 'image/jpeg' // default
+
+        switch (ext) {
+            case '.png':
+                contentType = 'image/png'
+                break
+            case '.gif':
+                contentType = 'image/gif'
+                break
+            case '.webp':
+                contentType = 'image/webp'
+                break
+            case '.svg':
+                contentType = 'image/svg+xml'
+                break
+            case '.jpg':
+            case '.jpeg':
+                contentType = 'image/jpeg'
+                break
+        }
+
+        // Return the image with appropriate headers
+        return new NextResponse(imageBuffer, {
+            headers: {
+                'Content-Type': contentType,
+                'Cache-Control': 'private, no-cache', // Prevent caching since access is protected
             },
         })
 
-        return NextResponse.json(images)
-
     } catch (error) {
-        console.error('Error fetching images:', error)
+        console.error('Error serving image:', error)
         return NextResponse.json(
-            { error: 'Failed to fetch images' },
+            { error: 'Failed to serve image' },
             { status: 500 }
         )
     }
