@@ -106,7 +106,7 @@ export default function Home() {
   return (
       <main className="container">
         <div className="content">
-          <h1 className="message">Will we see the webscroller ? Or will we see more?</h1>
+          <h1 className="message">Max funny pics countdown, or videogame he made 10 years ago. Time will tell</h1>
 
           <div className="timer">
             <h2>{timeLeft}</h2>
