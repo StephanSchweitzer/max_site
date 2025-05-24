@@ -25,7 +25,7 @@ export default function Page() {
                     {/* Status with Animation */}
                     <div className="space-y-4">
                         <p className="text-2xl md:text-3xl font-semibold text-gray-700 animate-fade-in">
-                            Under Construction
+                            Under Development
                         </p>
                     </div>
                 </div>
