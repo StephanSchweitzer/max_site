@@ -1,4 +1,10 @@
-import './globals.css'  // This line should be there
+import type { Metadata } from 'next'
+import './old-globals.css'
+
+export const metadata: Metadata = {
+    title: 'Mr. Max Pruitt',
+    description: 'Everything a man could need to know about me',
+}
 
 export default function RootLayout({
                                        children,

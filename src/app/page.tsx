@@ -1,335 +1,283 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+export default function UnderDevelopmentPage() {
+    return (
+        <>
+            <style jsx>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
 
-interface Image {
-  id: number
-  url: string
-  data: string // base64 data URL
-  filename: string
-  contentType: string
-}
+        .container {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #0f172a, #581c87, #0f172a);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          overflow: hidden;
+          position: relative;
+        }
 
-export default function Home() {
-  const [timeLeft, setTimeLeft] = useState('')
-  const [showImages, setShowImages] = useState(false)
-  const [images, setImages] = useState<Image[]>([])
-  const [password, setPassword] = useState('')
-  const [passwordError, setPasswordError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [loadingImages, setLoadingImages] = useState(false) // New loading state for images
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null) // For fullsize modal
+        .bg-blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(4rem);
+          opacity: 0.7;
+          animation: pulse 3s ease-in-out infinite;
+        }
 
-  // Calculate next Friday at noon
-  const getNextFridayNoon = () => {
-    const now = new Date()
-    const nextFriday = new Date()
+        .bg-blob-1 {
+          top: -1rem;
+          left: -1rem;
+          width: 18rem;
+          height: 18rem;
+          background: #8b5cf6;
+          animation-delay: 0s;
+        }
 
-    // Find next Friday
-    const daysUntilFriday = (5 - now.getDay() + 7) % 7
-    if (daysUntilFriday === 0 && now.getDay() === 5 && now.getHours() >= 12) {
-      // If it's Friday after noon, get next Friday
-      nextFriday.setDate(now.getDate() + 7)
-    } else if (daysUntilFriday === 0) {
-      // If it's Friday before noon, use today
-      nextFriday.setDate(now.getDate())
-    } else {
-      nextFriday.setDate(now.getDate() + daysUntilFriday)
-    }
+        .bg-blob-2 {
+          bottom: -2rem;
+          right: -1rem;
+          width: 18rem;
+          height: 18rem;
+          background: #06b6d4;
+          animation-delay: 2s;
+        }
 
-    nextFriday.setHours(12, 0, 0, 0) // Set to noon
-    return nextFriday
-  }
+        .bg-blob-3 {
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 18rem;
+          height: 18rem;
+          background: #ec4899;
+          animation-delay: 4s;
+        }
 
-  const targetDate = getNextFridayNoon()
+        .content {
+          position: relative;
+          z-index: 10;
+          text-align: center;
+          max-width: 64rem;
+          margin: 0 auto;
+        }
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime()
-      const distance = targetDate.getTime() - now
+        .logo-container {
+          margin-bottom: 2rem;
+          display: flex;
+          justify-content: center;
+        }
 
-      if (distance > 0) {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+        .logo {
+          position: relative;
+          width: 6rem;
+          height: 6rem;
+          background: linear-gradient(135deg, #22d3ee, #8b5cf6);
+          border-radius: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          transform: rotate(3deg);
+          transition: transform 0.5s ease;
+        }
 
-        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`)
-      } else {
-        setTimeLeft('Time\'s up!')
-        loadImages() // No password needed after countdown
-        clearInterval(timer)
-      }
-    }, 1000)
+        .logo:hover {
+          transform: rotate(0deg);
+        }
 
-    return () => clearInterval(timer)
-  }, [targetDate]) // Added targetDate to dependencies
+        .logo-spinner {
+          width: 3rem;
+          height: 3rem;
+          border: 4px solid white;
+          border-radius: 0.5rem;
+          animation: spin 2s linear infinite;
+        }
 
-  // Close modal on ESC key
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSelectedImage(null)
-      }
-    }
+        .logo-dot {
+          position: absolute;
+          top: -0.5rem;
+          right: -0.5rem;
+          width: 1.5rem;
+          height: 1.5rem;
+          background: #4ade80;
+          border-radius: 50%;
+          animation: bounce 1s infinite;
+        }
 
-    if (selectedImage) {
-      document.addEventListener('keydown', handleKeyDown)
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
+        .main-title {
+          font-size: 4rem;
+          font-weight: bold;
+          background: linear-gradient(to right, #22d3ee, #8b5cf6, #ec4899);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 1.5rem;
+          animation: pulse 2s ease-in-out infinite;
+        }
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = 'unset'
-    }
-  }, [selectedImage])
+        .subtitle {
+          font-size: 1.5rem;
+          color: #cbd5e1;
+          margin-bottom: 2rem;
+          line-height: 1.6;
+        }
 
-  // Updated loadImages to use batch endpoint
-  const loadImages = async (passwordToUse?: string) => {
-    setLoadingImages(true) // Start loading
-    try {
-      let response
+        .card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(16px);
+          border-radius: 1rem;
+          padding: 2rem;
+          margin-bottom: 2rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
 
-      if (passwordToUse) {
-        // Use POST method to send password in body
-        response = await fetch('/api/batch-images', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ password: passwordToUse }),
-        })
-      } else {
-        // No password (countdown expired)
-        response = await fetch('/api/batch-images')
-      }
+        .card-text {
+          color: #e2e8f0;
+          font-size: 1.125rem;
+          line-height: 1.6;
+          margin-bottom: 1rem;
+        }
 
-      if (response.ok) {
-        const result = await response.json()
-        setImages(result.images) // Images now include base64 data
-        setShowImages(true)
-      } else {
-        console.error('Failed to load images:', response.status)
-      }
-    } catch (error) {
-      console.error('Error loading images:', error)
-    } finally {
-      setLoadingImages(false) // End loading
-    }
-  }
+        .card-subtext {
+          color: #cbd5e1;
+          font-size: 1rem;
+        }
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setPasswordError('')
+        .progress-container {
+          margin-bottom: 2rem;
+        }
 
-    try {
-      const response = await fetch('/api/check-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-      })
+        .progress-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.875rem;
+          color: #94a3b8;
+          margin-bottom: 0.5rem;
+        }
 
-      const result = await response.json()
+        .progress-bar {
+          width: 100%;
+          height: 0.75rem;
+          background: rgba(71, 85, 105, 0.5);
+          border-radius: 9999px;
+          overflow: hidden;
+        }
 
-      if (result.valid) {
-        // Pass the valid password to loadImages
-        await loadImages(password)
-        setPassword('')
-      } else {
-        setPasswordError('Incorrect password')
-      }
-    } catch (error) {
-      setPasswordError('Error checking password')
-      console.log(error)
-    }
+        .progress-fill {
+          height: 100%;
+          width: 85%;
+          background: linear-gradient(to right, #06b6d4, #8b5cf6);
+          border-radius: 9999px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          animation: pulse 2s ease-in-out infinite;
+        }
 
-    setLoading(false)
-  }
+        .particle {
+          position: absolute;
+          width: 0.5rem;
+          height: 0.5rem;
+          background: white;
+          border-radius: 50%;
+          opacity: 0.2;
+          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+          pointer-events: none;
+        }
 
-  return (
-      <main className="container">
-        <div className="content">
-          <h1 className="message">Max funny pics countdown, or videogame he made 10 years ago?</h1>
+        @keyframes pulse {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 1; }
+        }
 
-          <div className="timer">
-            <h2>{timeLeft}</h2>
-          </div>
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
 
-          <style jsx>{`
-            .loading-container {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              padding: 2rem;
-            }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-25%); }
+        }
 
-            .spinner {
-              width: 40px;
-              height: 40px;
-              border: 4px solid #f3f3f3;
-              border-top: 4px solid #3498db;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-              margin-bottom: 1rem;
-            }
+        @keyframes ping {
+          75%, 100% {
+            transform: scale(2);
+            opacity: 0;
+          }
+        }
 
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
+        @media (max-width: 768px) {
+          .main-title {
+            font-size: 3rem;
+          }
+          .subtitle {
+            font-size: 1.25rem;
+          }
+          .card {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
 
-            .loading-container p {
-              margin: 0;
-              font-size: 1.1rem;
-              color: #666;
-            }
+            <div className="container">
+                {/* Animated background elements */}
+                <div className="bg-blob bg-blob-1"></div>
+                <div className="bg-blob bg-blob-2"></div>
+                <div className="bg-blob bg-blob-3"></div>
 
-            .image-container {
-              position: relative;
-              border-radius: 8px;
-              overflow: hidden;
-              transition: transform 0.2s ease;
-            }
+                {/* Main content */}
+                <div className="content">
+                    {/* Logo/Icon area */}
+                    <div className="logo-container">
+                        <div className="logo">
+                            <div className="logo-spinner"></div>
+                            <div className="logo-dot"></div>
+                        </div>
+                    </div>
 
-            .image-container:hover {
-              transform: scale(1.05);
-            }
+                    {/* Main heading */}
+                    <h1 className="main-title">Coming Soon</h1>
 
-            .image {
-              border-radius: 8px;
-              transition: all 0.2s ease;
-            }
+                    {/* Subtitle */}
+                    <p className="subtitle">Coming soon</p>
 
-            .modal-backdrop {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background-color: rgba(0, 0, 0, 0.8);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 1000;
-              cursor: pointer;
-            }
+                    {/* Description */}
+                    <div className="card">
+                        <p className="card-text">This site is currently under construction.</p>
+                        <p className="card-subtext">Check back soon for updates!</p>
+                    </div>
 
-            .modal-content {
-              position: relative;
-              background: white;
-              border-radius: 12px;
-              padding: 20px;
-              max-width: 95vw;
-              max-height: 95vh;
-              cursor: default;
-              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            }
-
-            .modal-close {
-              position: absolute;
-              top: 10px;
-              right: 15px;
-              background: none;
-              border: none;
-              font-size: 30px;
-              cursor: pointer;
-              color: #666;
-              z-index: 1001;
-              width: 40px;
-              height: 40px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border-radius: 50%;
-              transition: all 0.2s ease;
-            }
-
-            .modal-close:hover {
-              background-color: #f0f0f0;
-              color: #333;
-            }
-
-            .modal-image {
-              border-radius: 8px;
-            }
-          `}</style>
-
-          {!showImages && (
-              <form onSubmit={handlePasswordSubmit} className="password-form">
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    className="password-input"
-                    disabled={loading}
-                />
-                <button type="submit" disabled={loading} className="password-btn">
-                  {loading ? 'Checking...' : 'Submit'}
-                </button>
-                {passwordError && <p className="error">{passwordError}</p>}
-              </form>
-          )}
-
-          {loadingImages && (
-              <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Loading images...</p>
-              </div>
-          )}
-
-          {showImages && !loadingImages && (
-              <div className="images-container">
-                <h2>Surprise! 🎉</h2>
-                <div className="images-grid">
-                  {images.map((image) => (
-                      <div key={image.id} className="image-container">
-                        <Image
-                            src={image.data} // Use base64 data URL directly
-                            alt={`Image ${image.id}`}
-                            className="image"
-                            width={300}
-                            height={200}
-                            style={{ objectFit: 'cover', cursor: 'pointer' }}
-                            onClick={() => setSelectedImage(image)}
-                        />
-                      </div>
-                  ))}
+                    {/* Progress bar */}
+                    <div className="progress-container">
+                        <div className="progress-header">
+                            <span>Progress</span>
+                            <span>85%</span>
+                        </div>
+                        <div className="progress-bar">
+                            <div className="progress-fill"></div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-          )}
 
-          {/* Fullsize Image Modal */}
-          {selectedImage && (
-              <div className="modal-backdrop" onClick={() => setSelectedImage(null)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <button
-                      className="modal-close"
-                      onClick={() => setSelectedImage(null)}
-                      aria-label="Close modal"
-                  >
-                    ×
-                  </button>
-                  <Image
-                      src={selectedImage.data}
-                      alt={`Fullsize image ${selectedImage.id}`}
-                      width={800}
-                      height={600}
-                      style={{ objectFit: 'contain', maxWidth: '90vw', maxHeight: '90vh' }}
-                      className="modal-image"
-                  />
-                </div>
-              </div>
-          )}
-        </div>
-      </main>
-  )
+                {/* Floating particles */}
+                {[...Array(20)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="particle"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 3}s`,
+                            animationDuration: `${2 + Math.random() * 2}s`
+                        }}
+                    ></div>
+                ))}
+            </div>
+        </>
+    );
 }
