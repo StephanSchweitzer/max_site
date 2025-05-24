@@ -244,7 +244,6 @@ export default function UnderDevelopmentPage() {
                     <h1 className="main-title">Coming Soon</h1>
 
                     {/* Subtitle */}
-                    <p className="subtitle">Coming soon</p>
 
                     {/* Description */}
                     <div className="card">
