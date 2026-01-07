@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE "Person" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "firstName" TEXT,
+    "lastName" TEXT,
+    "email" TEXT,
+    "phoneNumber" TEXT,
+    "age" INTEGER,
+    "placeOfBirth" TEXT,
+    "photo" TEXT,
+    "instagram" TEXT,
+    "facebook" TEXT,
+    "tikTok" TEXT,
+    "hobbies" TEXT[],
+    "favoriteMovie" TEXT,
+    "favoriteTravelDestination" TEXT,
+    "favoriteFood" TEXT,
+    "favoriteMusicGenreArtist" TEXT,
+    "bestConcertEvent" TEXT,
+    "karaokeSong" TEXT,
+    "weekendActivity" TEXT,
+    "favoriteAnimal" TEXT,
+    "funFact" TEXT,
+    "hiddenTalent" TEXT,
+    "secretPin" TEXT NOT NULL,
+
+    CONSTRAINT "Person_pkey" PRIMARY KEY ("id")
+);

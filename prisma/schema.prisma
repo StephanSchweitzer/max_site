@@ -8,6 +8,44 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Person {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic info
+  firstName    String?
+  lastName     String?
+  email        String?
+  phoneNumber  String?
+  age          Int?
+  placeOfBirth String?
+  photo        String?
+
+  // Social media
+  instagram String?
+  facebook  String?
+  tikTok    String?
+
+  // Interests & hobbies
+  hobbies                   String[]
+  favoriteMovie             String?
+  favoriteTravelDestination String?
+  favoriteFood              String?
+  favoriteMusicGenreArtist  String?
+  bestConcertEvent          String?
+  karaokeSong               String?
+  weekendActivity           String?
+  favoriteAnimal            String?
+
+  // Personal traits
+  funFact      String?
+  hiddenTalent String?
+
+  // Security
+  secretPin String
+}
+
 model Image {
   id  Int    @id @default(autoincrement())
   url String
