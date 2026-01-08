@@ -115,7 +115,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <form onSubmit={handleSubmit} className="p-3 space-y-3">
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
                                 {error}
@@ -125,11 +125,11 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                         {/* Required Information */}
                         <div className="space-y-6 bg-slate-200 p-5 rounded-lg border border-slate-500">
                             <h3 className="font-semibold text-slate-800 mb-3 text-lg">Required Information *</h3>
+                            <label className="block text-sm font-semibold text-slate-700">
+                                Identification
+                            </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <label className="block text-sm font-semibold text-slate-700">
-                                    Identification
-                                </label>
-                                <input name="recruitNumber" placeholder="Recruit Number *" required className="input" />
+                                <input name="recruitNumber" placeholder="Recruit Number *" required className="input"/>
                                 <input name="firstName" placeholder="First Name *" required className="input" />
                                 <input name="lastName" placeholder="Last Name *" required className="input" />
                                 <input name="phoneNumber" type="tel" placeholder="Phone Number *" required className="input" />
@@ -227,12 +227,12 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                                     Secret Pin
                                 </label>
                                 <input
-                                name="secretPin"
-                                placeholder="Pin"
-                                required
-                                className="input w-full "
-                            />
-                                <p className="text-xs text-slate-600">Remember this PIN - you'll need it to edit or delete this entry</p></div>
+                                    name="secretPin"
+                                    placeholder="Pin"
+                                    required
+                                    className="input w-full "
+                                />
+                                <p className="text-xs text-slate-600">Remember this PIN - you&apos;ll need it to edit or delete this entry</p></div>
                         </div>
 
                         {/* Optional Information */}
@@ -311,14 +311,14 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-8 py-2 rounded-lg transition-colors"
+                                className="btn-primary"
                             >
                                 {loading ? 'Adding...' : 'Add Yourself'}
                             </button>
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-8 py-2 rounded-lg transition-colors"
+                                className="btn-secondary"
                             >
                                 Cancel
                             </button>
