@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -18,21 +20,71 @@ interface PersonFormDialogProps {
 export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [deletingPhoto, setDeletingPhoto] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [hobbies, setHobbies] = useState<string[]>([]);
     const [currentHobby, setCurrentHobby] = useState('');
 
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPhotoPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        // Set preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to Vercel Blob
+        setUploadingPhoto(true);
+        const uploadToast = toast.loading('Uploading photo...');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/upload-photo', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload photo');
+            }
+
+            const { url } = await response.json();
+            setPhotoUrl(url);
+            setSelectedFile(file);
+            toast.success('Photo uploaded successfully!', { id: uploadToast });
+        } catch (err) {
+            toast.error('Failed to upload photo. Please try again.', { id: uploadToast });
+            setPhotoPreview(null);
+        } finally {
+            setUploadingPhoto(false);
         }
+    };
+
+    const handleClose = async () => {
+        if (photoUrl && !loading) {
+            setDeletingPhoto(true);
+            try {
+                await fetch('/api/upload-photo', {
+                    method: 'DELETE',
+                    body: JSON.stringify({ url: photoUrl }),
+                });
+            } catch (err) {
+                // Silent fail for cleanup
+                console.error('Failed to delete orphaned photo:', err);
+            } finally {
+                setDeletingPhoto(false);
+            }
+        }
+        onClose();
     };
 
     const addHobby = () => {
@@ -48,8 +100,14 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!photoUrl) {
+            toast.error('Please upload a photo');
+            return;
+        }
+
         setLoading(true);
-        setError('');
+        const submitToast = toast.loading('Adding your profile...');
 
         const formData = new FormData(e.currentTarget);
         const data: any = {
@@ -60,7 +118,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
             age: formData.get('age') ? parseInt(formData.get('age') as string) : null,
             placeOfBirth: formData.get('placeOfBirth'),
             recruitNumber: formData.get('recruitNumber'),
-            photo: photoPreview,
+            photo: photoUrl,
             instagram: formData.get('instagram'),
             facebook: formData.get('facebook'),
             tikTok: formData.get('tikTok'),
@@ -92,74 +150,100 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                 throw new Error(errorData.error || 'Failed to add person');
             }
 
+            toast.success('Profile added successfully!', { id: submitToast });
             router.refresh();
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Something went wrong');
+            toast.error(err instanceof Error ? err.message : 'Something went wrong', { id: submitToast });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-y-auto rounded">
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto rounded">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold text-slate-800">Add Yourself</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-full overflow-x-hidden">
-                    {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                            {error}
-                        </div>
-                    )}
-
                     {/* Required Information */}
                     <div className="space-y-6 bg-slate-200 p-3 sm:p-5 rounded-lg border border-slate-500">
-                        <h3 className="font-semibold text-slate-800 mb-3 text-lg">Required Information *</h3>
-                        <label className="block text-sm font-semibold text-slate-700">
-                            Identification
-                        </label>
+                        <h3 className="font-semibold text-slate-800 mb-3 text-lg">Required Information</h3>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <input name="recruitNumber" placeholder="Recruit Number *" required className="input"/>
-                            <input name="firstName" placeholder="First Name *" required className="input" />
-                            <input name="lastName" placeholder="Last Name *" required className="input" />
-                            <input name="phoneNumber" type="tel" placeholder="Phone Number *" required className="input" />
+                            <input
+                                name="firstName"
+                                placeholder="First Name *"
+                                required
+                                className="input"
+                            />
+                            <input
+                                name="lastName"
+                                placeholder="Last Name *"
+                                required
+                                className="input"
+                            />
+                            <input
+                                name="phoneNumber"
+                                placeholder="Phone Number *"
+                                required
+                                className="input sm:col-span-2"
+                            />
+                            <input
+                                name="recruitNumber"
+                                placeholder="Recruit Number *"
+                                required
+                                className="input sm:col-span-2"
+                            />
                         </div>
 
-                        {/* Photo Upload */}
-                        <div
-                            className="space-y-3 cursor-pointer"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
+                        <div className="space-y-3">
                             <label className="block text-sm font-semibold text-slate-700">
-                                Photo
+                                Photo *
                             </label>
-
                             <div className="flex flex-col items-center gap-4">
                                 {photoPreview ? (
-                                    <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-slate-300">
+                                    <div
+                                        onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+                                        className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-slate-300 cursor-pointer hover:border-amber-400 transition-colors"
+                                    >
                                         <Image
                                             src={photoPreview}
                                             alt="Preview"
                                             fill
                                             className="object-cover"
                                         />
+                                        {uploadingPhoto && (
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
-                                    <div className="w-48 h-48 rounded-full bg-slate-100 border-4 border-dashed border-slate-300 flex items-center justify-center">
-                                        <svg className="w-16 h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
+                                    <div
+                                        onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+                                        className="w-48 h-48 rounded-full bg-slate-100 border-4 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-slate-200 transition-colors"
+                                    >
+                                        {uploadingPhoto ? (
+                                            <Loader2 className="w-16 h-16 text-slate-400 animate-spin" />
+                                        ) : (
+                                            <svg className="w-16 h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        )}
                                     </div>
                                 )}
 
                                 <button
                                     type="button"
-                                    className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+                                    disabled={uploadingPhoto}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    {photoPreview ? 'Change Photo' : 'Upload Photo *'}
+                                    {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {uploadingPhoto ? 'Uploading...' : photoPreview ? 'Change Photo' : 'Upload Photo *'}
                                 </button>
 
                                 <input
@@ -167,7 +251,6 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                                     type="file"
                                     accept="image/*"
                                     onChange={handlePhotoChange}
-                                    required
                                     className="hidden"
                                 />
                             </div>
@@ -289,16 +372,19 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                     <div className="flex gap-4 pt-6 border-t border-slate-200 justify-center">
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="btn-primary"
+                            disabled={loading || uploadingPhoto || !photoUrl}
+                            className="btn-primary flex items-center gap-2"
                         >
+                            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                             {loading ? 'Adding...' : 'Add Yourself'}
                         </button>
                         <button
                             type="button"
-                            onClick={onClose}
-                            className="btn-secondary"
+                            onClick={handleClose}
+                            disabled={loading || deletingPhoto}
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
+                            {deletingPhoto && <Loader2 className="w-4 h-4 animate-spin" />}
                             Cancel
                         </button>
                     </div>

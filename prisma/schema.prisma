@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model Person {
@@ -14,13 +12,14 @@ model Person {
   updatedAt DateTime @updatedAt
 
   // Basic info
-  firstName    String?
-  lastName     String?
-  email        String?
-  phoneNumber  String?
-  age          Int?
-  placeOfBirth String?
-  photo        String?
+  firstName     String?
+  lastName      String?
+  email         String?
+  phoneNumber   String?
+  age           Int?
+  placeOfBirth  String?
+  photo         String?
+  recruitNumber String?
 
   // Social media
   instagram String?
@@ -39,8 +38,10 @@ model Person {
   favoriteAnimal            String?
 
   // Personal traits
-  funFact      String?
-  hiddenTalent String?
+  funFact                String?
+  hiddenTalent           String?
+  previousWorkExperience String?
+  biography              String?
 
   // Security
   secretPin String

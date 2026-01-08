@@ -37,6 +37,7 @@ export async function POST(request: Request) {
                 phoneNumber: body.phoneNumber || null,
                 age: body.age || null,
                 placeOfBirth: body.placeOfBirth || null,
+                recruitNumber: body.recruitNumber || null,
                 photo: body.photo || null,
                 instagram: body.instagram || null,
                 facebook: body.facebook || null,
@@ -52,6 +53,8 @@ export async function POST(request: Request) {
                 favoriteAnimal: body.favoriteAnimal || null,
                 funFact: body.funFact || null,
                 hiddenTalent: body.hiddenTalent || null,
+                previousWorkExperience: body.previousWorkExperience || null,
+                biography: body.biography || null,
                 secretPin: body.secretPin,
             },
         });
@@ -107,6 +110,7 @@ export async function PATCH(request: Request) {
                 phoneNumber: updateData.phoneNumber || null,
                 age: updateData.age || null,
                 placeOfBirth: updateData.placeOfBirth || null,
+                recruitNumber: updateData.recruitNumber || null,
                 photo: updateData.photo || null,
                 instagram: updateData.instagram || null,
                 facebook: updateData.facebook || null,
@@ -122,6 +126,8 @@ export async function PATCH(request: Request) {
                 favoriteAnimal: updateData.favoriteAnimal || null,
                 funFact: updateData.funFact || null,
                 hiddenTalent: updateData.hiddenTalent || null,
+                previousWorkExperience: updateData.previousWorkExperience || null,
+                biography: updateData.biography || null,
             },
         });
 
