@@ -1,5 +1,7 @@
+// page.tsx
 import { prisma } from '@/lib/prisma';
 import PersonGrid from '@/components/PersonGrid';
+import Sidebar from '@/components/Sidebar';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,17 +21,22 @@ export default async function Home() {
     const people = await getPeople();
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-            <div className="container mx-auto px-4 py-12">
-                <header className="mb-12 text-center">
-                    <h1 className="text-4xl font-bold text-slate-800 mb-2">
-                        Firefighter Academy
-                    </h1>
-                    <p className="text-slate-600">Class Directory</p>
+        <>
+            <Sidebar />
+
+            <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+                <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+                    <div className="container mx-auto px-4 py-6">
+                        <h1 className="text-3xl font-bold text-slate-800 text-center">
+                            Class directory
+                        </h1>
+                    </div>
                 </header>
 
-                <PersonGrid people={people} />
-            </div>
-        </main>
+                <div className="container mx-auto px-4 py-12">
+                    <PersonGrid people={people} />
+                </div>
+            </main>
+        </>
     );
 }
