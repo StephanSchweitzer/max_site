@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 interface PersonFormDialogProps {
     isOpen: boolean;
@@ -17,22 +23,6 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [hobbies, setHobbies] = useState<string[]>([]);
     const [currentHobby, setCurrentHobby] = useState('');
-
-    // Prevent body scroll when modal is open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            document.body.style.touchAction = 'none';
-        } else {
-            document.body.style.overflow = '';
-            document.body.style.touchAction = '';
-        }
-
-        return () => {
-            document.body.style.overflow = '';
-            document.body.style.touchAction = '';
-        };
-    }, [isOpen]);
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -111,26 +101,14 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-            <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-y-auto rounded">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-slate-800">Add Yourself</DialogTitle>
+                </DialogHeader>
 
-            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col overscroll-contain">
-                <div className="sticky top-0 bg-white border-b px-3 sm:px-6 py-4 flex justify-between items-center z-10">
-                    <h2 className="text-2xl font-bold text-slate-800">Add Yourself</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-3 sm:p-6 space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-full overflow-x-hidden">
                     {error && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
                             {error}
@@ -151,53 +129,38 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                         </div>
 
                         {/* Photo Upload */}
-                        <div className="space-y-3">
+                        <div
+                            className="space-y-3 cursor-pointer"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
                             <label className="block text-sm font-semibold text-slate-700">
                                 Photo
                             </label>
 
-                            <div
-                                onClick={() => fileInputRef.current?.click()}
-                                className="flex items-start gap-4 cursor-pointer"
-                            >
+                            <div className="flex flex-col items-center gap-4">
                                 {photoPreview ? (
-                                    <div className="relative group">
+                                    <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-slate-300">
                                         <Image
                                             src={photoPreview}
                                             alt="Preview"
-                                            width={112}
-                                            height={112}
-                                            className="rounded-2xl object-cover border-2 border-blue-200 shadow-sm"
-                                            unoptimized={true}
+                                            fill
+                                            className="object-cover"
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setPhotoPreview(null);
-                                                if (fileInputRef.current) fileInputRef.current.value = '';
-                                            }}
-                                            className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
                                     </div>
                                 ) : (
-                                    <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 flex items-center justify-center">
-                                        <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    <div className="w-48 h-48 rounded-full bg-slate-100 border-4 border-dashed border-slate-300 flex items-center justify-center">
+                                        <svg className="w-16 h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                     </div>
                                 )}
 
-                                <div className="flex-1">
-                                    <div className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-center">
-                                        {photoPreview ? 'Change' : 'Upload'}
-                                    </div>
-                                    <p className="mt-2 text-xs text-slate-500">PNG, JPG up to 10MB</p>
-                                </div>
+                                <button
+                                    type="button"
+                                    className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+                                >
+                                    {photoPreview ? 'Change Photo' : 'Upload Photo *'}
+                                </button>
 
                                 <input
                                     ref={fileInputRef}
@@ -245,9 +208,10 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                                 name="secretPin"
                                 placeholder="Pin"
                                 required
-                                className="input w-full "
+                                className="input w-full"
                             />
-                            <p className="text-xs text-slate-600">Remember this PIN - you&apos;ll need it to edit or delete this post</p></div>
+                            <p className="text-xs text-slate-600">Remember this PIN - you&apos;ll need it to edit or delete this post</p>
+                        </div>
                     </div>
 
                     {/* Optional Information */}
@@ -292,9 +256,9 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {hobbies.map(hobby => (
                                     <span key={hobby} className="bg-blue-200 text-blue-900 px-3 py-1.5 rounded-full text-sm flex items-center gap-2">
-                                            {hobby}
+                                        {hobby}
                                         <button type="button" onClick={() => removeHobby(hobby)} className="text-blue-700 hover:text-blue-900 font-semibold">×</button>
-                                        </span>
+                                    </span>
                                 ))}
                             </div>
                         </div>
@@ -339,22 +303,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                         </button>
                     </div>
                 </form>
-            </div>
-
-            <style jsx>{`
-                .overscroll-contain {
-                    overscroll-behavior: contain;
-                }
-                .input {
-                    @apply w-full px-3 sm:px-6 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-slate-800;
-                }
-                .btn-primary {
-                    @apply px-6 py-3 bg-green-400 text-white font-medium rounded-2xl hover:bg-green-500 active:bg-green-600 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow;
-                }
-                .btn-secondary {
-                    @apply px-6 py-3 bg-slate-400 text-white font-medium rounded-2xl hover:bg-slate-500 active:bg-slate-600 transition-all;
-                }
-            `}</style>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }
