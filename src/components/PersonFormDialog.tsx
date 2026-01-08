@@ -69,6 +69,17 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
         }
     };
 
+    const resetForm = () => {
+        setPhotoPreview(null);
+        setPhotoUrl(null);
+        setSelectedFile(null);
+        setHobbies([]);
+        setCurrentHobby('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleClose = async () => {
         if (photoUrl && !loading) {
             setDeletingPhoto(true);
@@ -78,12 +89,12 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                     body: JSON.stringify({ url: photoUrl }),
                 });
             } catch (err) {
-                // Silent fail for cleanup
                 console.error('Failed to delete orphaned photo:', err);
             } finally {
                 setDeletingPhoto(false);
             }
         }
+        resetForm();
         onClose();
     };
 
@@ -152,6 +163,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
 
             toast.success('Profile added successfully!', { id: submitToast });
             router.refresh();
+            resetForm();
             onClose();
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Something went wrong', { id: submitToast });
