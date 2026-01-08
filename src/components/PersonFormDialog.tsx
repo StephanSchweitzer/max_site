@@ -126,6 +126,9 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                         <div className="space-y-6 bg-slate-200 p-5 rounded-lg border border-slate-500">
                             <h3 className="font-semibold text-slate-800 mb-3 text-lg">Required Information *</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <label className="block text-sm font-semibold text-slate-700">
+                                    Identification
+                                </label>
                                 <input name="recruitNumber" placeholder="Recruit Number *" required className="input" />
                                 <input name="firstName" placeholder="First Name *" required className="input" />
                                 <input name="lastName" placeholder="Last Name *" required className="input" />
@@ -135,7 +138,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                             {/* Photo Upload */}
                             <div className="space-y-3">
                                 <label className="block text-sm font-semibold text-slate-700">
-                                    Photo *
+                                    Photo
                                 </label>
 
                                 <div
@@ -193,6 +196,9 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                             </div>
 
                             <div className="space-y-4">
+                                <label className="block text-sm font-semibold text-slate-700">
+                                    About you
+                                </label>
                                 <textarea
                                     name="previousWorkExperience"
                                     placeholder="Previous Work Experience *"
@@ -216,13 +222,17 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                                 />
                             </div>
 
-                            <input
+                            <div className="space-y-4">
+                                <label className="block text-sm font-semibold text-slate-700">
+                                    Secret Pin
+                                </label>
+                                <input
                                 name="secretPin"
-                                placeholder="Secret PIN"
+                                placeholder="Pin"
                                 required
-                                className="input w-full"
+                                className="input w-full "
                             />
-                            <p className="text-xs text-slate-600">Remember this PIN - you'll need it to edit or delete your profile</p>
+                                <p className="text-xs text-slate-600">Remember this PIN - you'll need it to edit or delete this entry</p></div>
                         </div>
 
                         {/* Optional Information */}
