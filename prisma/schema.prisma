@@ -11,15 +11,20 @@ model Person {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Basic info
-  firstName     String?
-  lastName      String?
-  email         String?
-  phoneNumber   String?
-  age           Int?
-  placeOfBirth  String?
-  photo         String?
-  recruitNumber String?
+  // Basic info - REQUIRED fields
+  firstName              String
+  lastName               String
+  phoneNumber            String
+  recruitNumber          String
+  previousWorkExperience String
+  biography              String
+  funFact                String
+
+  // Basic info - OPTIONAL fields
+  email        String?
+  age          Int?
+  placeOfBirth String?
+  photo        String?
 
   // Social media
   instagram String?
@@ -38,10 +43,7 @@ model Person {
   favoriteAnimal            String?
 
   // Personal traits
-  funFact                String?
-  hiddenTalent           String?
-  previousWorkExperience String?
-  biography              String?
+  hiddenTalent String?
 
   // Security
   secretPin String
