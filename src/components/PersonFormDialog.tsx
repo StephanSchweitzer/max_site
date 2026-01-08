@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -17,6 +17,22 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [hobbies, setHobbies] = useState<string[]>([]);
     const [currentHobby, setCurrentHobby] = useState('');
+
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+        };
+    }, [isOpen]);
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -98,10 +114,10 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
-            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col overscroll-contain">
                 <div className="sticky top-0 bg-white border-b px-3 sm:px-6 py-4 flex justify-between items-center z-10">
                     <h2 className="text-2xl font-bold text-slate-800">Add Yourself</h2>
                     <button
@@ -324,6 +340,21 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                     </div>
                 </form>
             </div>
+
+            <style jsx>{`
+                .overscroll-contain {
+                    overscroll-behavior: contain;
+                }
+                .input {
+                    @apply w-full px-3 sm:px-6 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-slate-800;
+                }
+                .btn-primary {
+                    @apply px-6 py-3 bg-green-400 text-white font-medium rounded-2xl hover:bg-green-500 active:bg-green-600 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow;
+                }
+                .btn-secondary {
+                    @apply px-6 py-3 bg-slate-400 text-white font-medium rounded-2xl hover:bg-slate-500 active:bg-slate-600 transition-all;
+                }
+            `}</style>
         </div>
     );
 }
