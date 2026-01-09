@@ -32,7 +32,7 @@ export default async function Home() {
                     </div>
                 </header>
 
-                <div className="container mx-auto px-4 py-12">
+                <div className="container mx-auto px-4 pt-8 pb-12">
                     <PersonGrid people={people} />
                 </div>
             </main>
