@@ -258,7 +258,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
     return (
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-                <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto overflow-x-hidden p-0">
+                <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto overflow-x-hidden p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
                     {/* Hidden title for accessibility */}
                     <VisuallyHidden>
                         <DialogTitle>
@@ -291,7 +291,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                     </div>
 
                     {/* Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 space-y-4">
                         {isEditing ? (
                             <EditForm
                                 formData={formData}
