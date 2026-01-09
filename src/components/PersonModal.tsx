@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { Person } from '@prisma/client';
-import { X, Edit2, Save, Trash2, Loader2 } from 'lucide-react';
+import { Edit2, Save, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Dialog,
@@ -189,6 +189,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
             }
         } catch (error) {
             toast.error('Error saving changes', { id: saveToast });
+            console.log(error)
         } finally {
             setIsSaving(false);
         }

@@ -1,4 +1,3 @@
-// page.tsx
 import { prisma } from '@/lib/prisma';
 import PersonGrid from '@/components/PersonGrid';
 import Sidebar from '@/components/Sidebar';

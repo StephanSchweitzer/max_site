@@ -58,3 +58,12 @@ model Password {
   id       Int    @id @default(autoincrement())
   password String @unique
 }
+
+model QuizHighScore {
+  id        Int      @id @default(autoincrement())
+  name      String
+  score     Int
+  createdAt DateTime @default(now())
+
+  @@index([score])
+}

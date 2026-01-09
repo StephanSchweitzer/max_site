@@ -95,6 +95,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
             }
         }
         resetForm();
+        router.refresh()
         onClose();
     };
 
