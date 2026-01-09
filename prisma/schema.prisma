@@ -28,7 +28,7 @@ model Person {
 
   // Social media
   instagram String?
-  facebook  String?
+  twitter   String?
   tikTok    String?
 
   // Interests & hobbies

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { Person } from '@prisma/client';
-import { Edit2, Save, Trash2, Loader2 } from 'lucide-react';
+import { Edit2, Save, Trash2, Loader2, Instagram, Twitter, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Dialog,
@@ -448,31 +448,77 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
 function ViewMode({ person, hobbies }: { person: Person; hobbies: string[] }) {
     return (
         <div className="space-y-6 w-full max-w-full overflow-x-hidden">
-            {person.photo && (
-                <div className="flex justify-center mb-6">
-                    <div className="relative w-64 h-64 rounded-2xl overflow-hidden shadow-xl ring-4 ring-indigo-100">
-                        <Image
-                            src={person.photo}
-                            alt={`${person.firstName} ${person.lastName}`}
-                            fill
-                            className="object-cover"
-                        />
+            {/* Photo and Basic Info + Biography - side by side on large screens */}
+            <div className="flex flex-col lg:flex-row gap-6 mb-6">
+                {/* Left column: Photo + Social Media Icons */}
+                {person.photo && (
+                    <div className="flex flex-col items-center gap-4 flex-shrink-0">
+                        <div className="relative w-72 h-72 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] xl:w-[32rem] xl:h-[32rem] rounded-2xl overflow-hidden shadow-xl ring-4 ring-indigo-100">
+                            <Image
+                                src={person.photo}
+                                alt={`${person.firstName} ${person.lastName}`}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+
+                        {/* Social Media Icons */}
+                        {(person.instagram || person.twitter || person.tikTok) && (
+                            <div className="flex gap-3 justify-center items-center">
+                                {person.instagram && (
+                                    <a
+                                        href={person.instagram.startsWith('http') ? person.instagram : `https://instagram.com/${person.instagram.replace('@', '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg"
+                                        title="Instagram"
+                                    >
+                                        <Instagram className="w-6 h-6" />
+                                    </a>
+                                )}
+                                {person.twitter && (
+                                    <a
+                                        href={person.twitter.startsWith('http') ? person.twitter : `https://twitter.com/${person.twitter.replace('@', '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg"
+                                        title="Twitter"
+                                    >
+                                        <Twitter className="w-6 h-6" />
+                                    </a>
+                                )}
+                                {person.tikTok && (
+                                    <a
+                                        href={person.tikTok.startsWith('http') ? person.tikTok : `https://tiktok.com/@${person.tikTok.replace('@', '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg"
+                                        title="TikTok"
+                                    >
+                                        <Music className="w-6 h-6" />
+                                    </a>
+                                )}
+                            </div>
+                        )}
                     </div>
+                )}
+
+                {/* Right column: Basic Information + Biography */}
+                <div className="flex-1 space-y-6">
+                    <Section title="Basic Information" color="blue">
+                        <Detail label="Phone" value={person.phoneNumber} />
+                        {person.email && <Detail label="Email" value={person.email} />}
+                        {person.age && <Detail label="Age" value={person.age} />}
+                        {person.placeOfBirth && <Detail label="Place of Birth" value={person.placeOfBirth} />}
+                    </Section>
+
+                    {person.biography && (
+                        <Section title="Biography" color="indigo">
+                            <p className="text-slate-800 leading-relaxed break-words">{person.biography}</p>
+                        </Section>
+                    )}
                 </div>
-            )}
-
-            <Section title="Basic Information" color="blue">
-                <Detail label="Phone" value={person.phoneNumber} />
-                {person.email && <Detail label="Email" value={person.email} />}
-                {person.age && <Detail label="Age" value={person.age} />}
-                {person.placeOfBirth && <Detail label="Place of Birth" value={person.placeOfBirth} />}
-            </Section>
-
-            {person.biography && (
-                <Section title="Biography" color="indigo">
-                    <p className="text-slate-800 leading-relaxed break-words">{person.biography}</p>
-                </Section>
-            )}
+            </div>
 
             {person.previousWorkExperience && (
                 <Section title="Previous Work Experience" color="purple">
@@ -483,14 +529,6 @@ function ViewMode({ person, hobbies }: { person: Person; hobbies: string[] }) {
             {person.funFact && (
                 <Section title="Fun Fact" color="teal">
                     <p className="text-slate-800 leading-relaxed break-words">{person.funFact}</p>
-                </Section>
-            )}
-
-            {(person.instagram || person.facebook || person.tikTok) && (
-                <Section title="Social Media" color="blue">
-                    {person.instagram && <Detail label="Instagram" value={person.instagram} />}
-                    {person.facebook && <Detail label="Facebook" value={person.facebook} />}
-                    {person.tikTok && <Detail label="TikTok" value={person.tikTok} />}
                 </Section>
             )}
 
@@ -559,7 +597,7 @@ function EditForm({
         <div className="space-y-6 w-full max-w-full overflow-x-hidden">
             <div className="flex flex-col items-center gap-4 mb-6">
                 {photoPreview && (
-                    <div className="relative w-48 h-48 rounded-2xl overflow-hidden shadow-lg ring-4 ring-indigo-200">
+                    <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] rounded-2xl overflow-hidden shadow-lg ring-4 ring-indigo-200">
                         <Image
                             src={photoPreview}
                             alt="Profile preview"
@@ -624,9 +662,9 @@ function EditForm({
             </Section>
 
             <Section title="Social Media" color="blue" editMode>
-                <Input label="Instagram" value={formData.instagram} onChange={(v) => updateField('instagram', v)} color="blue" />
-                <Input label="Facebook" value={formData.facebook} onChange={(v) => updateField('facebook', v)} color="blue" />
-                <Input label="TikTok" value={formData.tikTok} onChange={(v) => updateField('tikTok', v)} color="blue" />
+                <Input label="Instagram username" value={formData.instagram} onChange={(v) => updateField('instagram', v)} color="blue" />
+                <Input label="Twitter username" value={formData.twitter} onChange={(v) => updateField('twitter', v)} color="blue" />
+                <Input label="TikTok username" value={formData.tikTok} onChange={(v) => updateField('tikTok', v)} color="blue" />
             </Section>
 
             <Section title="Hobbies" color="teal" editMode>
