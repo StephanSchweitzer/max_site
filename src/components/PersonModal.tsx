@@ -31,19 +31,16 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
     const [isVerifying, setIsVerifying] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Photo upload states
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(person.photo);
     const [newPhotoUrl, setNewPhotoUrl] = useState<string | null>(null);
     const [oldPhotoUrl, setOldPhotoUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    // Hobbies state
     const [hobbies, setHobbies] = useState<string[]>(person.hobbies || []);
     const [currentHobby, setCurrentHobby] = useState('');
 
     const cancelEdit = async () => {
-        // Clean up newly uploaded photo if not saved
         if (newPhotoUrl && !isSaving) {
             try {
                 await fetch('/api/upload-photo', {
@@ -86,14 +83,12 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Set preview
         const reader = new FileReader();
         reader.onloadend = () => {
             setPhotoPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
 
-        // Upload to Vercel Blob
         setUploadingPhoto(true);
         const uploadToast = toast.loading('Uploading photo...');
 
@@ -123,8 +118,6 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
             setUploadingPhoto(false);
         }
     };
-
-
 
     const handleUnlock = async () => {
         setIsVerifying(true);
@@ -174,7 +167,6 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
             if (response.ok) {
                 const updatedPerson = await response.json();
 
-                // Delete old photo if a new one was uploaded
                 if (newPhotoUrl && oldPhotoUrl) {
                     try {
                         await fetch('/api/upload-photo', {
@@ -190,15 +182,12 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                 setVerifiedPin('');
                 setNewPhotoUrl(null);
                 setOldPhotoUrl(null);
-                toast.success('Profile updated successfully', { id: saveToast });
-
-                // Trigger refresh with updated data
                 onUpdate?.(updatedPerson);
+                toast.success('Profile updated successfully!', { id: saveToast });
             } else {
-                const error = await response.json();
-                toast.error(error.error || 'Failed to save', { id: saveToast });
+                toast.error('Failed to update profile', { id: saveToast });
             }
-        } catch {
+        } catch (error) {
             toast.error('Error saving changes', { id: saveToast });
         } finally {
             setIsSaving(false);
@@ -207,15 +196,16 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        const deleteToast = toast.loading('Deleting profile...');
+        const deleteToast = toast.loading('Deleting person...');
 
         try {
-            const response = await fetch(`/api/people/${person.id}?pin=${verifiedPin}`, {
-                method: 'DELETE'
+            const response = await fetch(`/api/people/${person.id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: verifiedPin })
             });
 
             if (response.ok) {
-                // Delete photo from storage
                 if (person.photo) {
                     try {
                         await fetch('/api/upload-photo', {
@@ -223,20 +213,20 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                             body: JSON.stringify({ url: person.photo }),
                         });
                     } catch {
-                        console.error('Failed to delete photo');
+                        console.error('Failed to delete person photo');
                     }
                 }
 
-                toast.success('Profile deleted successfully', { id: deleteToast });
+                toast.success('Person deleted successfully', { id: deleteToast });
                 onClose();
             } else {
-                const error = await response.json();
-                toast.error(error.error || 'Failed to delete', { id: deleteToast });
+                toast.error('Failed to delete person', { id: deleteToast });
             }
         } catch {
             toast.error('Error deleting person', { id: deleteToast });
         } finally {
             setIsDeleting(false);
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -258,40 +248,53 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
     return (
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-                <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto overflow-x-hidden p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-                    {/* Hidden title for accessibility */}
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white overflow-x-hidden">
                     <VisuallyHidden>
-                        <DialogTitle>
-                            {isEditing ? 'Edit Profile' : `${person.firstName} ${person.lastName}`}
-                        </DialogTitle>
+                        <DialogTitle>Person Details</DialogTitle>
                     </VisuallyHidden>
-
-                    {/* Sticky Header */}
-                    <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10">
-                        <h2 className="text-2xl font-bold text-slate-800">
-                            {isEditing ? 'Edit Profile' : `${person.firstName} ${person.lastName}`}
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            {!isEditing && (
-                                <button
-                                    onClick={() => setShowPinPrompt(true)}
-                                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                                    title="Edit profile"
-                                >
-                                    <Edit2 size={24} className="text-slate-600" />
-                                </button>
+                    <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+                        <div className="flex items-center gap-3">
+                            {person.photo && (
+                                <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-indigo-200">
+                                    <Image
+                                        src={person.photo}
+                                        alt={`${person.firstName} ${person.lastName}`}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
                             )}
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
+                            <div>
+                                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                    {person.firstName} {person.lastName}
+                                </h2>
+                                <p className="text-sm text-slate-600">{person.recruitNumber}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Content */}
-                    <div className="p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                            {!isEditing ? (
+                                <>
+                                    <button
+                                        onClick={() => setShowPinPrompt(true)}
+                                        className="p-2 hover:bg-indigo-100 rounded-lg transition-colors text-indigo-600"
+                                        title="Edit"
+                                    >
+                                        <Edit2 className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </>
+                            ) : null}
+                        </div>
+                    </DialogHeader>
+
+                    <div className="py-4 w-full max-w-full overflow-x-hidden">
                         {isEditing ? (
                             <EditForm
                                 formData={formData}
@@ -307,65 +310,34 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                                 removeHobby={removeHobby}
                             />
                         ) : (
-                            <ViewMode person={person} />
+                            <ViewMode person={person} hobbies={hobbies} />
                         )}
-                    </div>
 
-                    {/* Action Buttons (Edit Mode) */}
-                    {isEditing && (
-                        <div className="sticky bottom-0 bg-white border-t border-slate-200 p-4 flex justify-between">
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                disabled={isDeleting}
-                                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {isDeleting ? (
-                                    <>
-                                        <Loader2 size={18} className="animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Trash2 size={18} />
-                                        Delete
-                                    </>
-                                )}
-                            </button>
-                            <div className="flex gap-2">
+                        {isEditing && (
+                            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-2xl hover:bg-blue-700 active:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
+                                >
+                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </button>
                                 <button
                                     onClick={cancelEdit}
-                                    disabled={isSaving}
-                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
+                                    className="flex-1 px-6 py-3 bg-slate-400 text-white font-medium rounded-2xl hover:bg-slate-500 active:bg-slate-600 transition-all"
                                 >
                                     Cancel
                                 </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving || uploadingPhoto}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {isSaving ? (
-                                        <>
-                                            <Loader2 size={18} className="animate-spin" />
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save size={18} />
-                                            Save
-                                        </>
-                                    )}
-                                </button>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
 
-            {/* PIN Prompt Overlay - Outside Dialog to fix z-index */}
             {showPinPrompt && (
                 <Dialog open={showPinPrompt} onOpenChange={setShowPinPrompt}>
-                    <DialogContent className="max-w-sm">
+                    <DialogContent className="sm:max-w-md bg-white">
                         <DialogHeader>
                             <DialogTitle>Enter PIN to Edit</DialogTitle>
                         </DialogHeader>
@@ -374,36 +346,28 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                                 type="password"
                                 value={pin}
                                 onChange={(e) => setPin(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && !isVerifying && handleUnlock()}
+                                onKeyPress={(e) => e.key === 'Enter' && pin.trim() && handleUnlock()}
                                 placeholder="Enter your PIN"
-                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full max-w-full px-4 py-3 border-2 border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center text-xl"
                                 autoFocus
-                                disabled={isVerifying}
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleUnlock}
+                                    disabled={isVerifying || !pin.trim()}
+                                    className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 font-medium transition-all shadow-md flex items-center justify-center gap-2"
+                                >
+                                    {isVerifying && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isVerifying ? 'Verifying...' : 'Unlock'}
+                                </button>
                                 <button
                                     onClick={() => {
                                         setShowPinPrompt(false);
                                         setPin('');
                                     }}
-                                    disabled={isVerifying}
-                                    className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 disabled:opacity-50"
+                                    className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors"
                                 >
                                     Cancel
-                                </button>
-                                <button
-                                    onClick={handleUnlock}
-                                    disabled={isVerifying}
-                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {isVerifying ? (
-                                        <>
-                                            <Loader2 size={18} className="animate-spin" />
-                                            Verifying...
-                                        </>
-                                    ) : (
-                                        'Unlock'
-                                    )}
                                 </button>
                             </div>
                         </div>
@@ -411,38 +375,61 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                 </Dialog>
             )}
 
-            {/* Delete Confirmation - Using Dialog */}
             {showDeleteConfirm && (
                 <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-                    <DialogContent className="max-w-sm">
+                    <DialogContent className="sm:max-w-md bg-white">
                         <DialogHeader>
-                            <DialogTitle className="text-red-700">Confirm Delete</DialogTitle>
+                            <DialogTitle>Confirm Deletion</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
-                            <p className="text-slate-700">
-                                Are you sure you want to delete this profile? This action cannot be undone.
+                            <p className="text-slate-600">
+                                Are you sure you want to delete <span className="font-semibold text-slate-900">{person.firstName} {person.lastName}</span>? This action cannot be undone.
                             </p>
-                            <div className="flex gap-2">
+                            <input
+                                type="password"
+                                value={pin}
+                                onChange={(e) => setPin(e.target.value)}
+                                placeholder="Enter your PIN"
+                                className="w-full max-w-full px-4 py-3 border-2 border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-center text-lg"
+                            />
+                            <div className="flex gap-3">
                                 <button
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                    disabled={isDeleting}
-                                    className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 disabled:opacity-50"
+                                    onClick={async () => {
+                                        if (!pin.trim()) return;
+                                        setIsVerifying(true);
+                                        try {
+                                            const response = await fetch(`/api/people/${person.id}/verify`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ pin })
+                                            });
+                                            const data = await response.json();
+                                            if (data.valid) {
+                                                setVerifiedPin(pin);
+                                                handleDelete();
+                                            } else {
+                                                toast.error('Invalid PIN');
+                                            }
+                                        } catch {
+                                            toast.error('Error verifying PIN');
+                                        } finally {
+                                            setIsVerifying(false);
+                                        }
+                                    }}
+                                    disabled={isDeleting || !pin.trim()}
+                                    className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 disabled:opacity-50 font-medium transition-all shadow-md flex items-center justify-center gap-2"
                                 >
-                                    Cancel
+                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isDeleting ? 'Deleting...' : 'Delete'}
                                 </button>
                                 <button
-                                    onClick={handleDelete}
-                                    disabled={isDeleting}
-                                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50"
+                                    onClick={() => {
+                                        setShowDeleteConfirm(false);
+                                        setPin('');
+                                    }}
+                                    className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors"
                                 >
-                                    {isDeleting ? (
-                                        <>
-                                            <Loader2 size={18} className="animate-spin" />
-                                            Deleting...
-                                        </>
-                                    ) : (
-                                        'Delete'
-                                    )}
+                                    Cancel
                                 </button>
                             </div>
                         </div>
@@ -453,56 +440,60 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
     );
 }
 
-function ViewMode({ person }: { person: Person }) {
+function ViewMode({ person, hobbies }: { person: Person; hobbies: string[] }) {
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full max-w-full overflow-x-hidden">
             {person.photo && (
-                <div className="relative w-full aspect-square max-w-md mx-auto rounded-xl overflow-hidden">
-                    <Image
-                        src={person.photo}
-                        alt={`${person.firstName} ${person.lastName}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        priority
-                    />
+                <div className="flex justify-center mb-6">
+                    <div className="relative w-64 h-64 rounded-2xl overflow-hidden shadow-xl ring-4 ring-indigo-100">
+                        <Image
+                            src={person.photo}
+                            alt={`${person.firstName} ${person.lastName}`}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
                 </div>
             )}
 
-            <Section title="Basic Information">
-                <Detail label="Full Name" value={`${person.firstName} ${person.lastName}`} />
-                <Detail label="Phone Number" value={person.phoneNumber} />
-                <Detail label="Recruit Number" value={person.recruitNumber} />
+            <Section title="Basic Information" color="blue">
+                <Detail label="Phone" value={person.phoneNumber} />
                 {person.email && <Detail label="Email" value={person.email} />}
                 {person.age && <Detail label="Age" value={person.age} />}
                 {person.placeOfBirth && <Detail label="Place of Birth" value={person.placeOfBirth} />}
             </Section>
 
-            <Section title="Biography">
-                <p className="text-slate-800 whitespace-pre-wrap">{person.biography}</p>
-            </Section>
+            {person.biography && (
+                <Section title="Biography" color="indigo">
+                    <p className="text-slate-800 leading-relaxed break-words">{person.biography}</p>
+                </Section>
+            )}
 
-            <Section title="Previous Work Experience">
-                <p className="text-slate-800 whitespace-pre-wrap">{person.previousWorkExperience}</p>
-            </Section>
+            {person.previousWorkExperience && (
+                <Section title="Previous Work Experience" color="purple">
+                    <p className="text-slate-800 leading-relaxed break-words">{person.previousWorkExperience}</p>
+                </Section>
+            )}
 
-            <Section title="Fun Fact">
-                <p className="text-slate-800 whitespace-pre-wrap">{person.funFact}</p>
-            </Section>
+            {person.funFact && (
+                <Section title="Fun Fact" color="teal">
+                    <p className="text-slate-800 leading-relaxed break-words">{person.funFact}</p>
+                </Section>
+            )}
 
             {(person.instagram || person.facebook || person.tikTok) && (
-                <Section title="Social Media">
+                <Section title="Social Media" color="blue">
                     {person.instagram && <Detail label="Instagram" value={person.instagram} />}
                     {person.facebook && <Detail label="Facebook" value={person.facebook} />}
                     {person.tikTok && <Detail label="TikTok" value={person.tikTok} />}
                 </Section>
             )}
 
-            {person.hobbies?.length > 0 && (
-                <Section title="Hobbies">
+            {hobbies.length > 0 && (
+                <Section title="Hobbies" color="teal">
                     <div className="flex flex-wrap gap-2">
-                        {person.hobbies.map((hobby, i) => (
-                            <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                        {hobbies.map(hobby => (
+                            <span key={hobby} className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium shadow-sm break-words">
                                 {hobby}
                             </span>
                         ))}
@@ -513,7 +504,7 @@ function ViewMode({ person }: { person: Person }) {
             {(person.favoriteMovie || person.favoriteFood || person.favoriteTravelDestination ||
                 person.favoriteMusicGenreArtist || person.bestConcertEvent || person.karaokeSong ||
                 person.weekendActivity || person.favoriteAnimal) && (
-                <Section title="Favorites">
+                <Section title="Favorites" color="indigo">
                     {person.favoriteMovie && <Detail label="Movie" value={person.favoriteMovie} />}
                     {person.favoriteFood && <Detail label="Food" value={person.favoriteFood} />}
                     {person.favoriteTravelDestination && <Detail label="Travel Destination" value={person.favoriteTravelDestination} />}
@@ -526,8 +517,8 @@ function ViewMode({ person }: { person: Person }) {
             )}
 
             {person.hiddenTalent && (
-                <Section title="Hidden Talent">
-                    <p className="text-slate-800 whitespace-pre-wrap">{person.hiddenTalent}</p>
+                <Section title="Other" color="purple">
+                    <Detail label="Hidden Talent" value={person.hiddenTalent} />
                 </Section>
             )}
         </div>
@@ -560,132 +551,150 @@ function EditForm({
     removeHobby: (hobby: string) => void;
 }) {
     return (
-        <div className="space-y-6">
-            {/* Photo Upload */}
-            <Section title="Photo">
-                <div className="flex flex-col items-center gap-4">
-                    {photoPreview && (
-                        <div className="relative w-48 h-48 rounded-lg overflow-hidden">
-                            <Image
-                                src={photoPreview}
-                                alt="Profile preview"
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                    )}
-                    <button
-                        type="button"
-                        disabled={uploadingPhoto}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {uploadingPhoto ? 'Uploading...' : photoPreview ? 'Change Photo' : 'Upload Photo'}
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoChange}
-                        className="hidden"
-                    />
-                </div>
+        <div className="space-y-6 w-full max-w-full overflow-x-hidden">
+            <div className="flex flex-col items-center gap-4 mb-6">
+                {photoPreview && (
+                    <div className="relative w-48 h-48 rounded-2xl overflow-hidden shadow-lg ring-4 ring-indigo-200">
+                        <Image
+                            src={photoPreview}
+                            alt="Profile preview"
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                )}
+                <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-6 py-3 bg-blue-600 text-white font-medium rounded-2xl hover:bg-blue-700 active:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow flex items-center justify-center gap-2"
+                >
+                    {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {uploadingPhoto ? 'Uploading...' : photoPreview ? 'Change Photo' : 'Upload Photo'}
+                </button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                />
+            </div>
+
+            <Section title="Basic Information" color="blue" editMode>
+                <Input label="First Name*" value={formData.firstName} onChange={(v) => updateField('firstName', v)} required color="blue" />
+                <Input label="Last Name*" value={formData.lastName} onChange={(v) => updateField('lastName', v)} required color="blue" />
+                <Input label="Phone Number*" value={formData.phoneNumber} onChange={(v) => updateField('phoneNumber', v)} required color="blue" />
+                <Input label="Recruit Number*" value={formData.recruitNumber} onChange={(v) => updateField('recruitNumber', v)} required color="blue" />
+                <Input label="Email" value={formData.email} onChange={(v) => updateField('email', v)} color="blue" />
+                <Input label="Age" value={formData.age} onChange={(v) => updateField('age', v ? parseInt(v) : null)} type="number" color="blue" />
+                <Input label="Place of Birth" value={formData.placeOfBirth} onChange={(v) => updateField('placeOfBirth', v)} color="blue" />
             </Section>
 
-            <Section title="Basic Information">
-                <Input label="First Name*" value={formData.firstName} onChange={(v) => updateField('firstName', v)} required />
-                <Input label="Last Name*" value={formData.lastName} onChange={(v) => updateField('lastName', v)} required />
-                <Input label="Phone Number*" value={formData.phoneNumber} onChange={(v) => updateField('phoneNumber', v)} required />
-                <Input label="Recruit Number*" value={formData.recruitNumber} onChange={(v) => updateField('recruitNumber', v)} required />
-                <Input label="Email" value={formData.email} onChange={(v) => updateField('email', v)} />
-                <Input label="Age" value={formData.age} onChange={(v) => updateField('age', v ? parseInt(v) : null)} type="number" />
-                <Input label="Place of Birth" value={formData.placeOfBirth} onChange={(v) => updateField('placeOfBirth', v)} />
-            </Section>
-
-            <Section title="Biography*">
+            <Section title="Biography*" color="indigo" editMode>
                 <textarea
                     value={formData.biography || ''}
                     onChange={(e) => updateField('biography', e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                    className="w-full max-w-full min-w-0 px-4 py-3 border-2 border-indigo-200 bg-indigo-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[100px] transition-all resize-none"
                     required
                 />
             </Section>
 
-            <Section title="Previous Work Experience*">
+            <Section title="Previous Work Experience*" color="purple" editMode>
                 <textarea
                     value={formData.previousWorkExperience || ''}
                     onChange={(e) => updateField('previousWorkExperience', e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                    className="w-full max-w-full min-w-0 px-4 py-3 border-2 border-purple-200 bg-purple-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px] transition-all resize-none"
                     required
                 />
             </Section>
 
-            <Section title="Fun Fact*">
+            <Section title="Fun Fact*" color="teal" editMode>
                 <textarea
                     value={formData.funFact || ''}
                     onChange={(e) => updateField('funFact', e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-w-full min-w-0 px-4 py-3 border-2 border-teal-200 bg-teal-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent min-h-[80px] transition-all resize-none"
                     required
                 />
             </Section>
 
-            <Section title="Social Media">
-                <Input label="Instagram" value={formData.instagram} onChange={(v) => updateField('instagram', v)} />
-                <Input label="Facebook" value={formData.facebook} onChange={(v) => updateField('facebook', v)} />
-                <Input label="TikTok" value={formData.tikTok} onChange={(v) => updateField('tikTok', v)} />
+            <Section title="Social Media" color="blue" editMode>
+                <Input label="Instagram" value={formData.instagram} onChange={(v) => updateField('instagram', v)} color="blue" />
+                <Input label="Facebook" value={formData.facebook} onChange={(v) => updateField('facebook', v)} color="blue" />
+                <Input label="TikTok" value={formData.tikTok} onChange={(v) => updateField('tikTok', v)} color="blue" />
             </Section>
 
-            <Section title="Hobbies">
+            <Section title="Hobbies" color="teal" editMode>
                 <div className="flex gap-2">
                     <input
                         value={currentHobby}
                         onChange={(e) => setCurrentHobby(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHobby())}
                         placeholder="Add a hobby"
-                        className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 min-w-0 px-4 py-2.5 border-2 border-teal-200 bg-teal-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     />
                     <button
                         type="button"
                         onClick={addHobby}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg"
+                        className="flex-shrink-0 px-6 py-3 bg-blue-600 text-white font-medium rounded-2xl hover:bg-blue-700 active:bg-blue-700 transition-all shadow-sm hover:shadow"
                     >
                         Add
                     </button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
                     {hobbies.map(hobby => (
-                        <span key={hobby} className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm flex items-center gap-2">
+                        <span key={hobby} className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm flex items-center gap-2 font-medium shadow-sm ring-1 ring-teal-200 break-words">
                             {hobby}
-                            <button type="button" onClick={() => removeHobby(hobby)} className="text-blue-700 hover:text-blue-900 font-semibold">×</button>
+                            <button type="button" onClick={() => removeHobby(hobby)} className="text-teal-900 hover:text-teal-700 font-bold text-lg leading-none flex-shrink-0">×</button>
                         </span>
                     ))}
                 </div>
             </Section>
 
-            <Section title="Favorites">
-                <Input label="Movie" value={formData.favoriteMovie} onChange={(v) => updateField('favoriteMovie', v)} />
-                <Input label="Food" value={formData.favoriteFood} onChange={(v) => updateField('favoriteFood', v)} />
-                <Input label="Travel Destination" value={formData.favoriteTravelDestination} onChange={(v) => updateField('favoriteTravelDestination', v)} />
-                <Input label="Music" value={formData.favoriteMusicGenreArtist} onChange={(v) => updateField('favoriteMusicGenreArtist', v)} />
-                <Input label="Best Concert" value={formData.bestConcertEvent} onChange={(v) => updateField('bestConcertEvent', v)} />
-                <Input label="Karaoke Song" value={formData.karaokeSong} onChange={(v) => updateField('karaokeSong', v)} />
-                <Input label="Weekend Activity" value={formData.weekendActivity} onChange={(v) => updateField('weekendActivity', v)} />
-                <Input label="Animal" value={formData.favoriteAnimal} onChange={(v) => updateField('favoriteAnimal', v)} />
+            <Section title="Favorites" color="indigo" editMode>
+                <Input label="Movie" value={formData.favoriteMovie} onChange={(v) => updateField('favoriteMovie', v)} color="indigo" />
+                <Input label="Food" value={formData.favoriteFood} onChange={(v) => updateField('favoriteFood', v)} color="indigo" />
+                <Input label="Travel Destination" value={formData.favoriteTravelDestination} onChange={(v) => updateField('favoriteTravelDestination', v)} color="indigo" />
+                <Input label="Music" value={formData.favoriteMusicGenreArtist} onChange={(v) => updateField('favoriteMusicGenreArtist', v)} color="indigo" />
+                <Input label="Best Concert" value={formData.bestConcertEvent} onChange={(v) => updateField('bestConcertEvent', v)} color="indigo" />
+                <Input label="Karaoke Song" value={formData.karaokeSong} onChange={(v) => updateField('karaokeSong', v)} color="indigo" />
+                <Input label="Weekend Activity" value={formData.weekendActivity} onChange={(v) => updateField('weekendActivity', v)} color="indigo" />
+                <Input label="Animal" value={formData.favoriteAnimal} onChange={(v) => updateField('favoriteAnimal', v)} color="indigo" />
             </Section>
 
-            <Section title="Other">
-                <Input label="Hidden Talent" value={formData.hiddenTalent} onChange={(v) => updateField('hiddenTalent', v)} />
+            <Section title="Other" color="purple" editMode>
+                <Input label="Hidden Talent" value={formData.hiddenTalent} onChange={(v) => updateField('hiddenTalent', v)} color="purple" />
             </Section>
         </div>
     );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, color = "slate", editMode = false }: {
+    title: string;
+    children: React.ReactNode;
+    color?: "indigo" | "blue" | "purple" | "teal" | "slate";
+    editMode?: boolean;
+}) {
+    const colorClasses = {
+        indigo: editMode ? "bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200" : "bg-gradient-to-br from-indigo-50/80 to-purple-50/60 border-indigo-100",
+        blue: editMode ? "bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200" : "bg-gradient-to-br from-blue-50/80 to-cyan-50/60 border-blue-100",
+        purple: editMode ? "bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200" : "bg-gradient-to-br from-purple-50/80 to-pink-50/60 border-purple-100",
+        teal: editMode ? "bg-gradient-to-br from-teal-50 to-cyan-50 border-teal-200" : "bg-gradient-to-br from-teal-50/80 to-cyan-50/60 border-teal-100",
+        slate: "bg-slate-50 border-slate-200"
+    };
+
+    const titleColorClasses = {
+        indigo: "text-indigo-700",
+        blue: "text-blue-700",
+        purple: "text-purple-700",
+        teal: "text-teal-700",
+        slate: "text-slate-700"
+    };
+
     return (
-        <div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-3">{title}</h3>
-            <div className="space-y-2">
+        <div className={`w-full max-w-full ${colorClasses[color]} border-2 rounded-xl p-5 shadow-sm transition-all ${editMode ? 'shadow-md' : ''}`}>
+            <h3 className={`text-lg font-bold ${titleColorClasses[color]} mb-4`}>{title}</h3>
+            <div className="space-y-3 w-full max-w-full">
                 {children}
             </div>
         </div>
@@ -694,23 +703,31 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Detail({ label, value }: { label: string; value: string | number | null }) {
     return (
-        <div className="flex flex-col sm:flex-row sm:gap-2">
-            <span className="text-slate-600 font-medium min-w-[140px]">{label}:</span>
-            <span className="text-slate-800">{value}</span>
+        <div className="flex flex-col sm:flex-row sm:gap-2 py-1 w-full max-w-full">
+            <span className="text-slate-600 font-semibold min-w-[140px] flex-shrink-0">{label}:</span>
+            <span className="text-slate-900 break-words">{value}</span>
         </div>
     );
 }
 
-function Input({ label, value, onChange, type = 'text', required = false }: {
+function Input({ label, value, onChange, type = 'text', required = false, color = "blue" }: {
     label: string;
     value: string | number | null | undefined;
     onChange: (value: string) => void;
     type?: string;
     required?: boolean;
+    color?: string;
 }) {
+    const colorClasses = {
+        blue: "border-blue-200 bg-blue-50/50 focus:ring-blue-500 focus:border-transparent",
+        indigo: "border-indigo-200 bg-indigo-50/50 focus:ring-indigo-500 focus:border-transparent",
+        purple: "border-purple-200 bg-purple-50/50 focus:ring-purple-500 focus:border-transparent",
+        teal: "border-teal-200 bg-teal-50/50 focus:ring-teal-500 focus:border-transparent",
+    };
+
     return (
-        <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+        <div className="w-full max-w-full">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                 {label}
             </label>
             <input
@@ -718,7 +735,7 @@ function Input({ label, value, onChange, type = 'text', required = false }: {
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 required={required}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full max-w-full min-w-0 px-4 py-2.5 border-2 ${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue} rounded-lg focus:outline-none focus:ring-2 transition-all`}
             />
         </div>
     );
