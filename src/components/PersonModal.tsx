@@ -253,7 +253,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
                 <DialogContent
                     className="max-w-[90vw] overflow-y-auto bg-white overflow-x-hidden rounded"
                     style={{
-                        maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4rem)',
+                        maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8rem)',
                     }}
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >

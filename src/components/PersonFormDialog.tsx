@@ -178,7 +178,7 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
             <DialogContent
                 className="max-w-[90vw] overflow-y-auto rounded"
                 style={{
-                    maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4rem)',
+                    maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8rem)',
                 }}
             >
                 <DialogHeader>
