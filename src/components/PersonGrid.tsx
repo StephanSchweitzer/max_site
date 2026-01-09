@@ -35,6 +35,12 @@ export default function PersonGrid({ people: initialPeople }: PersonGridProps) {
         setSelectedPerson(null);
     };
 
+    const handlePersonDelete = (deletedPersonId: number) => {
+        // Remove the person from the grid
+        setPeople(prev => prev.filter(p => p.id !== deletedPersonId));
+        setSelectedPerson(null);
+    };
+
     return (
         <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -92,6 +98,7 @@ export default function PersonGrid({ people: initialPeople }: PersonGridProps) {
                     isOpen={!!selectedPerson}
                     onClose={handleModalClose}
                     onUpdate={handlePersonUpdate}
+                    onDelete={handlePersonDelete}
                 />
             )}
         </>

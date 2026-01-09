@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -18,7 +17,6 @@ interface PersonFormDialogProps {
 }
 
 export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogProps) {
-    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [deletingPhoto, setDeletingPhoto] = useState(false);
@@ -95,7 +93,6 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
             }
         }
         resetForm();
-        router.refresh()
         onClose();
     };
 
@@ -163,9 +160,12 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
             }
 
             toast.success('Profile added successfully!', { id: submitToast });
-            router.refresh();
             resetForm();
             onClose();
+            // Reload page to show new person
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Something went wrong', { id: submitToast });
         } finally {
@@ -306,7 +306,8 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
                                 required
                                 className="input w-full"
                             />
-                            <p className="text-xs text-slate-600">Remember this PIN - you&apos;ll need it to edit or delete this post</p>
+                            <p className="text-xs text-slate-600">Remember this PIN - you&apos;ll need it to edit or delete this post.</p>
+                            <p className="text-xs text-slate-600">DO NOT use actual sensitive data, your entry is not encrypted.</p>
                         </div>
                     </div>
 

@@ -18,9 +18,10 @@ interface PersonModalProps {
     isOpen: boolean;
     onClose: () => void;
     onUpdate?: (updatedPerson: Person) => void;
+    onDelete?: (personId: number) => void;
 }
 
-export default function PersonModal({ person, isOpen, onClose, onUpdate }: PersonModalProps) {
+export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelete }: PersonModalProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [showPinPrompt, setShowPinPrompt] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -195,15 +196,14 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
         }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = async (pinToUse?: string) => {
         setIsDeleting(true);
         const deleteToast = toast.loading('Deleting person...');
 
         try {
-            const response = await fetch(`/api/people/${person.id}`, {
+            const pinValue = pinToUse || verifiedPin;
+            const response = await fetch(`/api/people/${person.id}?pin=${encodeURIComponent(pinValue)}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pin: verifiedPin })
             });
 
             if (response.ok) {
@@ -219,6 +219,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                 }
 
                 toast.success('Person deleted successfully', { id: deleteToast });
+                onDelete?.(person.id);
                 onClose();
             } else {
                 toast.error('Failed to delete person', { id: deleteToast });
@@ -410,7 +411,7 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                                             const data = await response.json();
                                             if (data.valid) {
                                                 setVerifiedPin(pin);
-                                                handleDelete();
+                                                handleDelete(pin);
                                             } else {
                                                 toast.error('Invalid PIN');
                                             }
@@ -420,11 +421,11 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate }: Perso
                                             setIsVerifying(false);
                                         }
                                     }}
-                                    disabled={isDeleting || !pin.trim()}
+                                    disabled={isVerifying || isDeleting || !pin.trim()}
                                     className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 disabled:opacity-50 font-medium transition-all shadow-md flex items-center justify-center gap-2"
                                 >
-                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    {isDeleting ? 'Deleting...' : 'Delete'}
+                                    {(isVerifying || isDeleting) && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isVerifying ? 'Verifying...' : isDeleting ? 'Deleting...' : 'Delete'}
                                 </button>
                                 <button
                                     onClick={() => {
