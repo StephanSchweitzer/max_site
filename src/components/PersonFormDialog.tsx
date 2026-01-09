@@ -175,7 +175,12 @@ export default function PersonFormDialog({ isOpen, onClose }: PersonFormDialogPr
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto rounded">
+            <DialogContent
+                className="max-w-[90vw] overflow-y-auto rounded"
+                style={{
+                    maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4rem)',
+                }}
+            >
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold text-slate-800">Add Yourself</DialogTitle>
                 </DialogHeader>

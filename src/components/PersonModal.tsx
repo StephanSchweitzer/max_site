@@ -251,7 +251,10 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
                 <DialogContent
-                    className="max-h-[90vh] max-w-[90vw] overflow-y-auto bg-white overflow-x-hidden rounded"
+                    className="max-w-[90vw] overflow-y-auto bg-white overflow-x-hidden rounded"
+                    style={{
+                        maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4rem)',
+                    }}
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                     <VisuallyHidden>
@@ -342,7 +345,12 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
 
             {showPinPrompt && (
                 <Dialog open={showPinPrompt} onOpenChange={setShowPinPrompt}>
-                    <DialogContent className="sm:max-w-md bg-white">
+                    <DialogContent
+                        className="sm:max-w-md bg-white my-4 sm:my-8"
+                        style={{
+                            maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 6rem)',
+                        }}
+                    >
                         <DialogHeader>
                             <DialogTitle>Enter PIN to Edit</DialogTitle>
                         </DialogHeader>
@@ -382,7 +390,12 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
 
             {showDeleteConfirm && (
                 <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-                    <DialogContent className="sm:max-w-md bg-white">
+                    <DialogContent
+                        className="sm:max-w-md bg-white my-4 sm:my-8"
+                        style={{
+                            maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4rem)',
+                        }}
+                    >
                         <DialogHeader>
                             <DialogTitle>Confirm Deletion</DialogTitle>
                         </DialogHeader>
