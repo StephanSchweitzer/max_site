@@ -269,6 +269,8 @@ export default function PersonModal({ person, isOpen, onClose, onUpdate, onDelet
                                         alt={`${person.firstName} ${person.lastName}`}
                                         fill
                                         className="object-cover"
+                                        placeholder="blur"
+                                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjwvc3ZnPg=="
                                     />
                                 </div>
                             )}
@@ -472,6 +474,8 @@ function ViewMode({ person, hobbies }: { person: Person; hobbies: string[] }) {
                                 alt={`${person.firstName} ${person.lastName}`}
                                 fill
                                 className="object-cover"
+                                placeholder="blur"
+                                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjwvc3ZnPg=="
                             />
                         </div>
 
